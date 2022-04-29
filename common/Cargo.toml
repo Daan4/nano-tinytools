@@ -11,6 +11,7 @@ blake2b_simd = "1.0"
 bitvec = "0.22"
 byteorder = "1.4"
 once_cell = "1.10"
+regex = "1.5"
 
 # This is a modified version of https://github.com/dalek-cryptography/ed25519-dalek
 # which hashes using blake2b instead of sha256.

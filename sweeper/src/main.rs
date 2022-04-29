@@ -1,9 +1,8 @@
 use serde_derive::Deserialize;
 use std::fs;
 use toml;
-use regex::Regex;
 use lazy_static::lazy_static;
-use nano_tinytools_common::{derive_private_key, derive_public_key, derive_address, hexstring_to_bytes, HEX};
+use nano_tinytools_common::{derive_private_key, derive_public_key, derive_address, hexstring_to_bytes, validate_seed, validate_address};
 
 lazy_static! {
     pub static ref CONFIG: Config = Config::new();
@@ -33,14 +32,15 @@ fn main() {
     let mut index = CONFIG.start_index;
     let stop_index = CONFIG.stop_index;
 
-    // Validate seed format
-    assert!(seed.len() == 64);
-    assert!(seed.chars().all(|x| HEX.contains(&&x.to_string().as_str())));
+    // Validate seed and target format
+    if !validate_seed(&seed) {
+        panic!("Seed must consist of 64 hex characters")
+    }
     let seed = hexstring_to_bytes(&seed);
 
-    // Validate target format
-    let re = Regex::new(r"^(nano|xrb)_[13]{1}[13456789abcdefghijkmnopqrstuwxyz]{59}$").unwrap();
-    assert!(re.is_match(&target));
+    if !validate_address(&target) {
+        panic!("Target must be a valid nano address")
+    }
 
     // Sweep
     while index < stop_index {

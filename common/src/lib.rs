@@ -3,6 +3,7 @@ use blake2b_simd::{Hash, Params};
 use byteorder::{BigEndian, WriteBytesExt};
 use ed25519_dalek::{PublicKey, SecretKey};
 use once_cell::sync::Lazy;
+use regex::Regex;
 
 /// Derive private key from seed and index
 pub fn derive_private_key(seed: [u8; 32], index: u32) -> Hash {
@@ -96,9 +97,14 @@ pub fn hexstring_to_bytes(hexstring: &str) -> [u8; 32] {
     buf
 }
 
-pub fn validate_seed() {}
+pub fn validate_seed(seed: &str) -> bool {
+    seed.chars().count() == 64 && seed.chars().all(|x| HEX.contains(&x.to_string().as_str()))
+}
 
-pub fn validate_address() {}
+pub fn validate_address(target: &str) -> bool {
+    let re = Regex::new(r"^(nano|xrb)_[13]{1}[13456789abcdefghijkmnopqrstuwxyz]{59}$").unwrap();
+    re.is_match(target)
+}
 
 #[cfg(test)]
 mod tests {
