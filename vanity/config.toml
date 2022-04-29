@@ -1,0 +1,11 @@
+# string which the address must start with
+starts_with = ""
+
+# string which the address must end with
+ends_with = ""
+
+# string which the address must contain
+contains = "daan"
+
+# number of threads (set to the number of logical processors available)
+num_threads = 4

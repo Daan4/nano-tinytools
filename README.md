@@ -15,12 +15,6 @@ run tool
 cargo run
 ```
 
-benchmark tool
-
-```bash
-cargo run -- benchmark
-```
-
 ## Sweeper
 
 Sweep a seed to find a specific account and return the index where the account was found.

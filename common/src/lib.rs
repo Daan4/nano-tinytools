@@ -4,6 +4,10 @@ use byteorder::{BigEndian, WriteBytesExt};
 use ed25519_dalek::{PublicKey, SecretKey};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use rand::prelude::*;
+use rand_chacha::ChaCha20Rng;
+use lazy_static::lazy_static;
+use std::sync::Mutex;
 
 /// Derive private key from seed and index
 pub fn derive_private_key(seed: [u8; 32], index: u32) -> Hash {
@@ -113,4 +117,18 @@ pub fn validate_seed(seed: &str) -> bool {
 pub fn validate_address(target: &str) -> bool {
     let re = Regex::new(r"^(nano|xrb)_[13]{1}[13456789abcdefghijkmnopqrstuwxyz]{59}$").unwrap();
     re.is_match(target)
+}
+
+lazy_static! {
+    static ref RNG: Mutex<ChaCha20Rng> = Mutex::new(ChaCha20Rng::from_entropy());
+}
+/// Generate random seed
+pub fn generate_random_seed() -> [u8; 32] {
+    let mut seed = [0; 32];
+    for i in 0..32 {
+        let mut rng = RNG.lock().unwrap();
+        seed[i] = rng.gen_range(0..16) << 4 | rng.gen_range(0..16);
+        drop(rng);
+    }
+    seed
 }

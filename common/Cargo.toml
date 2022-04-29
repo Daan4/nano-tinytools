@@ -12,6 +12,9 @@ bitvec = "0.22"
 byteorder = "1.4"
 once_cell = "1.10"
 regex = "1.5"
+rand_chacha = "0.3"
+rand = { version = "0.8", features = ["getrandom"] }
+lazy_static = "1.4"
 
 # This is a modified version of https://github.com/dalek-cryptography/ed25519-dalek
 # which hashes using blake2b instead of sha256.

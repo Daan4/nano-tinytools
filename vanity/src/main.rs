@@ -1,98 +1,97 @@
-use rand::prelude::*;
-use rand_chacha::ChaCha20Rng;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
 use std::time::Instant;
 use regex::Regex;
-use nano_tinytools_common::{derive_private_key, derive_public_key, derive_address, bytes_to_hexstring};
+use std::fs;
+use toml;
+use serde_derive::Deserialize;
+use lazy_static::lazy_static;
+use nano_tinytools_common::{derive_private_key, derive_public_key, derive_address, bytes_to_hexstring, generate_random_seed};
 
-// --SETTINGS--
+lazy_static! {
+    static ref CONFIG: Config = Config::new();
+}
 
-// The text the vanity address should start with, empty to ignore
-const STARTS_WITH: &str = "";
+static CONFIG_PATH: &str = "config.toml";
 
-// The text the vanity address should end with, empty to ignore
-const ENDS_WITH: &str = "";
+#[derive(Deserialize)]
+struct Config {
+    starts_with: String,
+    ends_with: String,
+    contains: String,
+    num_threads: u32,
+}
 
-// The text the vanity address should contain, empty to ignore
-const CONTAINS: &str = "daan";
-
-// Number of threads, set to number of logical processors
-const NUM_THREADS: u32 = 4;
+impl Config { 
+    fn new() -> Self {
+        let contents = fs::read_to_string(CONFIG_PATH).expect("Something went wrong reading the file");
+        toml::from_str(&contents).unwrap()
+    }
+}
 
 fn main() {
-    // benchmark();
+    let now = Instant::now();
 
+    // Read config
+    let starts_with = CONFIG.starts_with.as_str();
+    let ends_with = CONFIG.ends_with.as_str();
+    let contains = CONFIG.contains.as_str();
+    let num_threads = CONFIG.num_threads;
+
+    // Validate config
     let re = Regex::new(r"[13456789abcdefghijkmnopqrstuwxyz]{0,59}$").unwrap();
-    if STARTS_WITH != "" && !re.is_match(STARTS_WITH) {
-        println!("Invalid STARTS_WITH setting");
+    if starts_with != "" && !re.is_match(starts_with) {
+        println!("Invalid starts_with setting");
         return;
     }
-    if ENDS_WITH != "" && !re.is_match(ENDS_WITH) {
-        println!("Invalid ENDS_WITH setting");
+    if ends_with != "" && !re.is_match(ends_with) {
+        println!("Invalid ends_with setting");
         return;
     }
-    if CONTAINS != "" && !re.is_match(CONTAINS) {
-        println!("Invalid CONTAINS setting");
+    if contains != "" && !re.is_match(contains) {
+        println!("Invalid contains setting");
         return;
     }
 
     let mut ts: Vec<thread::JoinHandle<()>> = vec![];
     let (tx, rx): (Sender<()>, Receiver<()>) = channel();
 
-    for _ in 0..NUM_THREADS {
+    for id in 0..num_threads {
         let tx_clone = tx.clone();
-        ts.push(thread::spawn(|| {
-            let rng = &mut ChaCha20Rng::from_entropy();
-            inner(&mut rng.clone(), tx_clone);
+        ts.push(thread::spawn(move || {
+            inner(id, tx_clone);
         }));
     }
 
     rx.recv().unwrap();
+
+    println!("\ntime taken: {} s", now.elapsed().as_millis() as f32 / 1000.0);
 }
 
-fn inner(rng: &mut ChaCha20Rng, tx: Sender<()>) {
+fn inner(id: u32, tx: Sender<()>) {
+    let starts_with = CONFIG.starts_with.as_str();
+    let ends_with = CONFIG.ends_with.as_str();
+    let contains = CONFIG.contains.as_str();
+    let mut count = 0;
+
     loop {
-        let seed = generate_random_seed(rng);
+        let seed = generate_random_seed();
         let private_key = derive_private_key(seed, 0);
         let public_key = derive_public_key(private_key);
         let address = derive_address(public_key);
-        if address[1..].starts_with(STARTS_WITH)
-            && address.ends_with(ENDS_WITH)
-            && address.contains(CONTAINS)
+        if address[1..].starts_with(starts_with)
+            && address.ends_with(ends_with)
+            && address.contains(contains)
         {
-            println!("{}\n{}", address, bytes_to_hexstring(&seed));
+            println!("\naddress: {}\nseed: {}", address, bytes_to_hexstring(&seed));
             tx.send(()).unwrap();
             break;
         }
-    }
-}
 
-fn benchmark() {
-    let rng = &mut ChaCha20Rng::from_entropy();
-
-    let mut count = 0;
-    let runs = 20000;
-    let now = Instant::now();
-    while count < runs {
-        let seed = generate_random_seed(rng);
-        let private_key = derive_private_key(seed, 0);
-        let public_key = derive_public_key(private_key);
-        derive_address(public_key);
         count += 1;
-    }
-    println!(
-        "{} runs: {}s",
-        runs,
-        now.elapsed().as_millis() as f32 / 1000.0
-    );
-}
 
-/// Generate random seed
-fn generate_random_seed(rng: &mut ChaCha20Rng) -> [u8; 32] {
-    let mut seed = [0; 32];
-    for i in 0..32 {
-        seed[i] = rng.gen_range(0..16) << 4 | rng.gen_range(0..16);
+        if count % 1000 == 0 {
+            println!("thread {} count {}", id, count);
+        }
     }
-    seed
 }

@@ -7,7 +7,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rand_chacha = "0.3"
-rand = { version = "0.8", features = ["getrandom"] }
 nano_tinytools_common = { path = "../common"}
 regex = "1.5"
+toml = "0.5"
+serde = "1.0"
+serde_derive = "1.0"
+lazy_static = "1.4"
