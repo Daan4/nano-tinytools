@@ -1,0 +1,13 @@
+[package]
+name = "nano_tinytools_vanity"
+version = "0.1.0"
+authors = ["Daan Lubbers (contact@daanlubbers.nl)"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand_chacha = "0.3"
+rand = { version = "0.8", features = ["getrandom"] }
+nano_tinytools_common = { path = "../common"}
+regex = "1.5"

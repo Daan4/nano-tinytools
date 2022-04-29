@@ -55,7 +55,7 @@ const ALPHABET: &str = "13456789abcdefghijkmnopqrstuwxyz";
 static ALPHABET_VEC: Lazy<Vec<char>> = Lazy::new(|| ALPHABET.chars().collect());
 const ENCODING_BITS: usize = 5;
 
-pub fn encode_nano_base_32(bits: &BitSlice<Msb0, u8>) -> String {
+fn encode_nano_base_32(bits: &BitSlice<Msb0, u8>) -> String {
     debug_assert_eq!(
         bits.len() % ENCODING_BITS,
         0,
@@ -97,6 +97,15 @@ pub fn hexstring_to_bytes(hexstring: &str) -> [u8; 32] {
     buf
 }
 
+pub fn bytes_to_hexstring(bytes: &[u8]) -> String {
+    let mut buf = String::new();
+    for x in bytes.iter() {
+        buf += HEX[(*x >> 4) as usize];
+        buf += HEX[0x0F & *x as usize];
+    }
+    buf
+}
+
 pub fn validate_seed(seed: &str) -> bool {
     seed.chars().count() == 64 && seed.chars().all(|x| HEX.contains(&x.to_string().as_str()))
 }
@@ -104,13 +113,4 @@ pub fn validate_seed(seed: &str) -> bool {
 pub fn validate_address(target: &str) -> bool {
     let re = Regex::new(r"^(nano|xrb)_[13]{1}[13456789abcdefghijkmnopqrstuwxyz]{59}$").unwrap();
     re.is_match(target)
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
 }
