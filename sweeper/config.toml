@@ -1,0 +1,11 @@
+# seed to sweep here
+seed = "907933879BCBA2F7C92E3A03A59255F3BC3B72C4AD49E7A57B48B7DF5F4ADD20"
+
+# target account to find
+target = "nano_1yg1yp4snroz8qnq8nibjmzat3f9a6tjnyy4u9mce3h58j4jozqpf1seybi8"
+
+# sweep start index (inclusive) min 0; max 2^32-1
+start_index = 0
+
+# sweep stop index (inclusive) min 0; max 2^32-1
+stop_index = 4294967295
