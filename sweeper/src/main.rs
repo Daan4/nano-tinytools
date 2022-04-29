@@ -1,21 +1,22 @@
 use serde_derive::Deserialize;
 use std::fs;
+use std::time::Instant;
 use toml;
 use lazy_static::lazy_static;
 use nano_tinytools_common::{derive_private_key, derive_public_key, derive_address, hexstring_to_bytes, validate_seed, validate_address};
 
 lazy_static! {
-    pub static ref CONFIG: Config = Config::new();
+    static ref CONFIG: Config = Config::new();
 }
 
 static CONFIG_PATH: &str = "config.toml";
 
 #[derive(Deserialize)]
-pub struct Config {
-    pub seed: String,
-    pub target: String,
-    pub start_index: u32,
-    pub stop_index: u32,
+struct Config {
+    seed: String,
+    target: String,
+    start_index: u32,
+    stop_index: u32,
 }
 
 impl Config { 
@@ -26,6 +27,8 @@ impl Config {
 }
 
 fn main() {
+    let now = Instant::now();
+
     // Read config
     let seed = CONFIG.seed.to_owned();
     let target = CONFIG.target.to_owned();
@@ -49,7 +52,7 @@ fn main() {
         let address = derive_address(public_key);
 
         if address == target {
-            println!("found {} @ index {}", address, index);
+            println!("\nfound target {} @ index {}", address, index);
             break;
         }
 
@@ -59,4 +62,6 @@ fn main() {
             println!("{}", index)
         }
     }
+
+    println!("\ntime taken: {} s", now.elapsed().as_millis() as f32 / 1000.0);
 }
