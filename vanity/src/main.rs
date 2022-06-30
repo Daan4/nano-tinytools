@@ -53,18 +53,16 @@ fn main() {
         return;
     }
 
-    let mut ts: Vec<thread::JoinHandle<()>> = vec![];
     let (tx, rx): (Sender<()>, Receiver<()>) = channel();
 
     for id in 0..num_threads {
         let tx_clone = tx.clone();
-        ts.push(thread::spawn(move || {
+        thread::spawn(move || {
             inner(id, tx_clone);
-        }));
+        });
     }
 
     rx.recv().unwrap();
-
     println!("\ntime taken: {} s", now.elapsed().as_millis() as f32 / 1000.0);
 }
 
